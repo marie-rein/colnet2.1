@@ -1,0 +1,48 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization;
+@using System.Security.Claims;
+@using ColNet2._0.Authentification;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<style>
+    body {
+        background-image: url("/images/livre2.png");
+        background-repeat: no-repeat;
+        background-size: cover;
+    }
+
+    .container {
+    }
+</style>
+
+<h3>Welcome Mr/Ms @UserName</h3>
+
+
+<div class="container">
+
+    <div class="module align-items-center">
+
+        <header>
+            <h1 class="align-content-center text-black-50 fw-bold" style="text-align:center; margin-top:100px; margin-left:120px;">
+                Demain commence ici
+            </h1>
+        </header>
+    </div>
+</div>
+
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    private string UserName;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationState;
+        var user = authState.User.Identity.Name;
+
+        UserName = user;
+    }
+}
+

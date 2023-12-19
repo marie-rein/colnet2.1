@@ -1,0 +1,117 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations;
+@using Microsoft.AspNetCore.Mvc;
+@using ColNet2._0.Services
+@using ColNet2._0.Data
+@using ColNet2._0.CustomModels
+@using ColNet2._0.Authentification
+@using Syncfusion.Blazor.Buttons
+@inject LoginService loginService;
+@inject IJSRuntime JS
+@inject NavigationManager navManager
+@inject AuthenticationStateProvider authProvider
+
+
+<PageTitle>Login</PageTitle>
+
+
+
+<section class="vh-100 gradient-custom">
+    <div class="container py-3 h-100" >
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5" style="border-radius:5rem;border-color:black;">
+                <div class="card-header">
+                    <div>
+                        <img src="/images/colnet.png" asp-append-version="true" width="150px" alt="non trouvé" />
+                    </div>
+                    <div class="card-body py-4 px-md-4 text-center">
+                        <div class="mb-md-4 mt-md-3 pb-4">
+                            <h2 class="fw-bold mb-2 text-uppercase text-black" style="font-size: 1.5rem;">Connexion</h2>
+                            <p class="text-black-50 mb-3" style="font-size: 0.9rem;">Connexion à votre compte</p>
+
+                            @if (checkLogin != null)
+                            {
+                                <EditForm Model="@checkLogin" OnValidSubmit="VerifierLogin">
+                                    <DataAnnotationsValidator />
+
+                                    <div class="form-outline form-white mb-3">
+                                        <span class="e-icons e-user"></span>
+                                        <InputText type="email" name="email" class="form-control form-control-lg text-black-50" style="border-radius: 0.8rem; border-color: black; font-size: 0.9rem;" placeholder="Courriel" @bind-Value="checkLogin.email" autocomplete="off"></InputText>
+                                        <ValidationMessage For="@(() => checkLogin.email)" />
+                                    </div>
+
+                                    <div class="form-outline form-white mb-3">
+                                        <InputText type="password" name="password" class="form-control form-control-lg text-black-50" style="border-radius: 0.8rem; border-color: black; font-size: 0.9rem;" placeholder="Password" @bind-Value="checkLogin.password" />
+                                        <ValidationMessage For="@(() => checkLogin.password)" />
+                                    </div>
+
+                                    @if (estClicker)
+                                    {
+                                        @if (alertMessage)
+                                        {
+                                            navManager.NavigateTo("/", true);
+                                        }
+                                        else
+                                        {
+                                            <span style="color:red; font-size: 0.8rem;">Mot de passe et/ou courriel incorrecte</span>
+                                        }
+                                    }
+
+                                    <p class="small mb-3 pb-lg-1"><a class="text-black" href="verifierCourriel" style="font-size: 0.8rem;">Mot de passe oublié?</a></p>
+
+                                    <button class="btn btn-outline-dark btn-lg px-4" type="submit" style="border-radius: 0.8rem; border-color: black; background-color: black; color: whitesmoke; font-size: 0.9rem;">Login</button>
+                                </EditForm>
+                            }
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@code {
+
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    protected CheckLogin checkLogin { get; set; }
+
+    private bool alertMessage { get; set; }
+    private bool estClicker = false;
+    private string message = string.Empty;
+
+    protected override Task OnInitializedAsync()
+    {
+        checkLogin = new CheckLogin();
+        return base.OnInitializedAsync();
+    }
+
+    protected async Task<bool> VerifierLogin()
+    {
+        try
+        {
+            if (!(string.IsNullOrWhiteSpace(checkLogin.email) || string.IsNullOrWhiteSpace(checkLogin.password)))
+            {
+               
+                estClicker = true;
+                alertMessage = await loginService.SelectUserLogin(checkLogin, (CustomAuthenticationStateProvider)authProvider);
+
+            }
+        }
+        catch (Exception e)
+        {
+            return alertMessage;
+
+        }
+
+
+        return alertMessage;
+    }
+
+    public async Task<bool> CheckUser()
+    {
+        return true;
+    }
+
+}

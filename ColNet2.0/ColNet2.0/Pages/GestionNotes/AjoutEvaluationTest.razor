@@ -1,0 +1,161 @@
+﻿@page "/ajoutevaluation"
+@using ColNet2._0.CustomModels
+@using ColNet2._0.Services
+@using ColNet2._0.Models
+@inject AjoutEvaluationService serviceEvaluation
+@inject GetLoggedUser loggedUser
+@inject IJSRuntime js
+
+<section class="vh-100 gradient-custom">
+    <div class="container py-3 h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-12 col-md-8 col-lg-6 col-xl-5" style="border-radius:3rem;">
+                <div class="card-header">
+                    <div>
+                        <h2 class="fw-bold mb-2 text-uppercase text-black" style="font-size: 1.5rem; text-align:center">Ajout Évaluation</h2>
+                    </div>
+                    <div class="card-body py-4 px-md-4 text-center">
+                        <div class="mb-md-4 mt-md-3 pb-4">
+                            <EditForm Model="@ajoutEvaluationProperty" OnValidSubmit="AjouterEvaluations">
+                                <DataAnnotationsValidator />
+
+                                <div class="form-outline form-white mb-3">
+                                    <label class="form-check-label">
+                                        Sélectionner le cours
+                                    </label>
+                                    <select @bind="selectedCourId" class="form-control">
+                                        <option value="">Sélectionnez un cours</option>
+
+                                        @foreach (var cours in listCoursProf)
+                                        {
+                                            <option value="@cours.NoCour">@cours.NomCour</option>
+                                        }
+
+
+
+                                    </select>
+                                </div>
+                                <div class="form-outline form-white mb-3">
+
+                                    <label class="form-label" for="form1">Titre de l'évaluation</label>
+                                    <InputText name="titre" class="form-control form-control-lg text-black-50" style="border-radius: 0.8rem; border-color: black; font-size: 0.9rem;" placeholder="Titre" @bind-Value="ajoutEvaluationProperty.Titre" autocomplete="off"></InputText>
+                                    <ValidationMessage For="@(() => ajoutEvaluationProperty.Titre)" />
+                                </div>
+
+                                <div class="form-outline form-white mb-3">
+                                    <label class="form-label" for="form2">Type d'évaluation</label>
+                                    <InputText name="type" class="form-control form-control-lg text-black-50" style="border-radius: 0.8rem; border-color: black; font-size: 0.9rem;" placeholder="Type" @bind-Value="ajoutEvaluationProperty.TypeEvaluation" />
+                                    <ValidationMessage For="@(() => ajoutEvaluationProperty.TypeEvaluation)" />
+                                </div>
+                                <div class="form-outline form-white mb-3">
+                                    <label class="form-label" for="form2">Intruction</label>
+                                    <InputTextArea name="instruction" class="form-control form-control-lg text-black-50" style="border-radius: 0.8rem; border-color: black; font-size: 0.9rem;" placeholder="Instruction" @bind-Value="ajoutEvaluationProperty.Instruction" />
+                                    <ValidationMessage For="@(() => ajoutEvaluationProperty.Instruction)" />
+                                </div>
+                                <div class="form-outline form-white mb-3">
+                                    <label class="form-label" for="form2">Max points</label>
+                                    <InputNumber name="point" class="form-control form-control-lg text-black-50" style="border-radius: 0.8rem; border-color: black; font-size: 0.9rem;" placeholder="Max point" @bind-Value="ajoutEvaluationProperty.pointMax" />
+                                    <ValidationMessage For="@(() => ajoutEvaluationProperty.pointMax)" />
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-outline form-white mb-3">
+                                            <label class="form-label" for="form2">Date d'affectation</label>
+                                            <InputDate name="date1" class="form-control form-control-lg text-black-50" @bind-Value="ajoutEvaluationProperty.DateEvaluation" />
+                                            <ValidationMessage For="@(() => ajoutEvaluationProperty.DateEvaluation)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-outline form-white mb-3">
+                                            <label class="form-label" for="form2">Date de rémise</label>
+                                            <InputDate name="date2" class="form-control form-control-lg text-black-50" @bind-Value="ajoutEvaluationProperty.Echeance" />
+                                            <ValidationMessage For="@(() => ajoutEvaluationProperty.Echeance)" />
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <span style="color:red">@message</span>
+                                <button class="btn btn-outline-dark btn-lg px-4" type="submit" style="border-radius: 0.8rem; border-color: black; background-color: black; color: whitesmoke; font-size: 0.9rem;">Enregistrer</button>
+                            </EditForm>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private AjoutEvaluationProperty ajoutEvaluationProperty { get; set; } = new AjoutEvaluationProperty();
+
+    private List<TblCour> listCoursProf { get; set; } = new List<TblCour>();
+    private string message = string.Empty;
+    private string emailProf { get; set; }
+    private bool checkDate { get; set; }
+
+
+    private int selectedCourId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        emailProf = await loggedUser.GetUserEmail();
+
+        if (emailProf != null)
+        {
+            listCoursProf = await serviceEvaluation.RemplirCoursProfesseur(emailProf);
+        }
+
+    }
+    public async Task AjouterEvaluations()
+    {
+        try
+        {
+            checkDate = await CheckDates();
+
+            if (checkDate)
+            {
+                await serviceEvaluation.AjoutEvaluation(selectedCourId, ajoutEvaluationProperty.Titre, ajoutEvaluationProperty.TypeEvaluation, ajoutEvaluationProperty.Instruction,
+                ajoutEvaluationProperty.pointMax, ajoutEvaluationProperty.DateEvaluation, ajoutEvaluationProperty.Echeance);
+                message= "Évaluation ajoutée avec succès";
+            }
+            else
+            {
+                message = "La date d'affectation ne doit pas dépasser la date d'écheance";
+            }
+
+        }
+        catch (Exception)
+        {
+            message = "Erreur survenue. l'évaluation n'a pas été ajouté. Veillez réesayer plus tard ";
+
+        }
+
+    }
+
+    private async Task<bool> CheckDates()
+    {
+        int resultat = DateTime.Compare(ajoutEvaluationProperty.DateEvaluation, ajoutEvaluationProperty.Echeance);
+
+        if (resultat > 0)
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    private async Task ViderInput()
+    {
+        this.ajoutEvaluationProperty.Titre = null;
+        this.ajoutEvaluationProperty.TypeEvaluation = null;
+        this.ajoutEvaluationProperty.Instruction = null;
+        this.ajoutEvaluationProperty.DateEvaluation = DateTime.Now;
+        this.ajoutEvaluationProperty.Echeance = DateTime.Now;
+        this.ajoutEvaluationProperty.pointMax = 0;
+    }
+
+}

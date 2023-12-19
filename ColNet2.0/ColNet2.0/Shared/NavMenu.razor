@@ -1,0 +1,79 @@
+﻿ <div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">ColNet</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+   
+    <nav class="flex-column">
+            @*<NavLink class="nav-link float-end" href="" @onclick="()=> expandMenu = !expandMenu">
+                <span class="oi oi-plus" aria-hidden="true"></span> 
+            </NavLink>*@
+        
+       @* <button title="Navigation menu" class="navbar-toggler" @onclick="()=> expandMenu = !expandMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>*@
+
+       
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+            
+     
+           <AuthorizeView Roles="professeur">
+               <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="ajoutNotesEtudiant">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Ajouter notes étudiant
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="ajoutevaluation">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Ajouter évaluation
+                    </NavLink>
+                </div>
+               </Authorized>
+           </AuthorizeView>
+           <AuthorizeView Roles="admin">
+               <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="ajoutUtilisateur">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Ajouter Utilisateur
+                    </NavLink>
+                </div>
+               </Authorized>
+           </AuthorizeView>
+           
+            <AuthorizeView Roles="etudiant">
+                <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="notesEleve">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Notes Eleve
+                    </NavLink>
+                </div>
+                </Authorized>
+            </AuthorizeView>
+           
+
+          
+       
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool expandMenu;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

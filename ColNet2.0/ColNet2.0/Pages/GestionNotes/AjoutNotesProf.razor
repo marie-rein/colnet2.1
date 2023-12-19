@@ -1,0 +1,211 @@
+﻿@page "/ajoutNotesEtudiant"
+@using ColNet2._0.Services
+@using ColNet2._0.Data
+@using ColNet2._0.Models
+@using ColNet2._0.CustomModels
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using Syncfusion.Blazor.Grids;
+@using Syncfusion.Blazor.Buttons
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject NotesService notesService
+@inject GetLoggedUser loggedUser
+@inject AjoutEvaluationService evaluationService
+@inject AuthenticationStateProvider authProvider
+@inject IJSRuntime JS
+
+
+<h3>AjoutNotesProf</h3>
+
+
+<div>
+    <div class="row">
+        <div class="col-md-6 mb-4 pb-2">
+            <select @bind="selectedCourId" class="form-control">
+                <option>Selectionner un cours</option>
+
+                @foreach (var cour in lesCours)
+                {
+                    <option value="@cour.NoCour">@cour.NomCour</option>
+                }
+            </select>
+            <button @onclick="ChargerEvaluation" type="submit">Charger Evaluations</button>
+        </div>
+
+        <div class="col-md-6 mb-4 pb-2">
+            <select @bind="selectedEvaluation" class="form-control">
+                <option>Selectionner un travail</option>
+
+                @foreach (var travail in evaluations)
+                {
+                    <option value="@travail.NoTravail">@travail.TypeTravail</option>
+                }
+            </select>
+            <button @onclick="AfficherEtudiantCours" type="submit">Afficher Evaluations</button>
+        </div>
+
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <QuickGrid Items="@dataSourceCombined">
+                <PropertyColumn Property="@(e => e.NumeroDa)" Sortable="true"></PropertyColumn>
+                <PropertyColumn Property="@(e => e.NomEleve)" Sortable="true" />
+                <PropertyColumn Property="@(e => e.PrenEleve)" Sortable="true" /> 
+                    <TemplateColumn Sortable="true" Title="Note obtenue">
+                    <div>
+                        <label>
+                            <input type="text" @bind="@context.noteEleve" />
+                        </label>
+                    </div>
+                    </TemplateColumn>
+
+                <TemplateColumn Sortable="true" Title="Note Travail">
+                    <div>
+                        <label>
+                            <input type="text" @bind="@context.noteTravail" />
+                        </label>
+                    </div>
+                </TemplateColumn>
+                <TemplateColumn Sortable="true" Title="Commentaire">
+                    <div>
+                        <label>
+                            <input type="text" @bind="@context.commentaire" />
+                        </label>
+                    </div>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions">
+                    <button class="btn btn-info" @onclick="@(() => Edit(context))">Modifier</button>
+                    <button class="btn btn-danger" @onclick="@(() => Supprimer(context))">Supprimer</button>
+                </TemplateColumn>
+            </QuickGrid>
+           
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+
+
+    private int selectedCourId { get; set; }
+    private int selectedEvaluation { get; set; }
+    private List<TblCour> lesCours { get; set; } = new List<TblCour>();
+    private List<TblEleve> lesEtudiantCours { get; set; } = new List<TblEleve>();
+    private List<TblTravaux> evaluations { get; set; } = new List<TblTravaux>();
+    private List<TblNote> lesNotes { get; set; } = new List<TblNote>();
+    IQueryable<Combinaison> dataSourceCombined { get; set; } = Enumerable.Empty<Combinaison>().AsQueryable();
+
+    private string emailProf { get; set; }
+    private string type { get; set; }
+    private string titre { get; set; }
+    private DateTime date1 { get; set; }
+    private DateTime date2 { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        emailProf = await loggedUser.GetUserEmail();
+
+        if (emailProf != null)
+        {
+
+            lesCours = await evaluationService.RemplirCoursProfesseur(emailProf);
+
+        }
+
+    }
+
+
+    public async Task ChargerEvaluation()
+    {
+        if (selectedCourId != 0)
+        {
+            evaluations = await notesService.RecupererEvaluation(selectedCourId);
+            PasserValues();
+        }
+
+    }
+    public async Task AfficherEtudiantCours()
+    {
+        if (selectedCourId != 0)
+        {
+            lesEtudiantCours = await notesService.RemplirEtudiant(selectedCourId);
+
+        }
+        dataSourceCombined = CombinezSource(lesEtudiantCours, evaluations, lesNotes);
+    }
+
+    //private void OnCoursSelectionChanged(ChangeEventArgs args)
+    //{
+    //    if (int.TryParse(args.Value.ToString(), out int selectedId))
+    //    {
+    //        evaluationsFiltrees = evaluations.Where(e => e.NoCours == selectedId).ToList();
+    //        // Assurez-vous d'adapter la logique selon la structure de vos classes
+    //    }
+    //    else
+    //    {
+    //        evaluationsFiltrees = new List<TblTravaux>();
+    //    }
+    //}
+
+    public async void PasserValues()
+    {
+
+
+        foreach (var item in evaluations)
+        {
+
+            titre = item.Titre;
+            type = item.TypeTravail;
+            date1 = item.DateAffectation;
+            date2 = item.Echeance;
+
+        }
+    }
+    public IQueryable<Combinaison> CombinezSource(List<TblEleve> listEleve, List<TblTravaux> listTravaux, List<TblNote> listNotes)
+    {
+        var combinaison = listEleve.Select(e => new Combinaison
+            {
+                NumeroDa = e.NumeroDa,
+                NomEleve = e.NomEleve,
+                PrenEleve = e.PrenEleve,
+
+            })
+        .Union(listNotes.Select(n => new Combinaison
+            {
+
+                noteEleve = (short)n.NotesEleve,
+                noteTravail =(short) n.NotesTravail,
+                moyenne = (short)n.MoyenneEleve,
+                NoTravail = n.NoTravail
+
+            }))
+        .AsQueryable();
+
+        return combinaison;
+    }
+
+    async Task Edit(Combinaison note)
+    {
+        try
+        {
+            await notesService.AjouterNoteEleve(note.NumeroDa, selectedEvaluation, note.noteTravail, note.noteEleve,note.commentaire);
+            
+            await JS.InvokeVoidAsync("alert", "Note ajoutée");
+        }
+        catch (Exception)
+        {
+
+           await JS.InvokeVoidAsync("alert", "Erreur");
+        }
+      
+    }
+
+    void Supprimer(Combinaison  note)
+    {
+        
+    }
+
+}
+
