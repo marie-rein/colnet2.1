@@ -57,12 +57,12 @@ namespace ColNet2._0.Services
             var coursEleve = (from cours in dbContext.TblCours
                               from eleve in cours.NumeroDa
                               where cours.NoCour == noCours
-                              select new TblEleve { NomEleve = eleve.NomEleve, PrenEleve = eleve.PrenEleve, NumeroDa = eleve.NumeroDa }).Distinct().ToListAsync();
+                              select eleve).ToList();
 
             //var coursEleve = dbContext.Set<TblEleve>()
             //    .FromSqlRaw("SELECT nomEleve,prenEleve,E.numeroDA FROM tblEleve AS E JOIN tblCoursEleve AS CE ON E.numeroDA = CE.numeroDA JOIN tblCour AS C ON C.noCour = CE.noCours where C.noCour = @noCours", param1);
 
-            return await coursEleve;
+            return  coursEleve;
         }
 
         public async Task<List<TblTravaux>> RecupererEvaluation(int noCours)
@@ -90,6 +90,35 @@ namespace ColNet2._0.Services
 
             dbContext.TblNotes.Add(nouvelleNote);
             await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<TblNote>> SelectionnerNotes(int numeroTravail)
+        {
+            var dbContext = _factory.CreateDbContextAsync().Result;
+
+
+            var lesNotes = (from note in dbContext.TblNotes
+                            where note.NoTravail == numeroTravail
+                            select note).ToListAsync();
+
+            return await lesNotes;
+        }
+
+        public void UpdateNote(int numeroDa,int nouvelleNote)
+        {
+            var dbContext = _factory.CreateDbContextAsync().Result;
+
+            var updateNote = from note in dbContext.TblNotes
+                             where note.NumeroDa == numeroDa
+                             select note;
+
+            foreach (var note in updateNote)
+            {
+                note.NotesEleve = (short)nouvelleNote;
+            }
+
+            dbContext.SaveChangesAsync();
+
         }
 
     }

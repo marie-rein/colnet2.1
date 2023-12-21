@@ -47,28 +47,28 @@ namespace ColNet2._0.Services
 
                 if (estEtud)
                 {
-                    var nomEtudiant = from users in dbContext.TblEleves
+                    var nomEtudiant = (from users in dbContext.TblEleves
                                       where users.CourrielEleve == check.email
-                                      select users.NomEleve;
+                                      select users.NomEleve).FirstOrDefault();
                     
-                    await custom.UpdateAuthenticationState(new UserSession { nom = nomEtudiant.ToString(), role = "etudiant", email=check.email});
+                    await custom.UpdateAuthenticationState(new UserSession { nom = nomEtudiant, role = "etudiant", email=check.email});
                     estLogger = true;
 
                 }
                 else if (estAdmin)
                 {
-                    var nomAdmin = from users in dbContext.TblAdmins
+                    var nomAdmin = (from users in dbContext.TblAdmins
                                    where users.CourrielAdmin == check.email
-                                   select users.NomAdmin;
-                    await custom.UpdateAuthenticationState(new UserSession { nom = nomAdmin.ToString(), role = "admin", email = check.email });
+                                   select users.NomAdmin).FirstOrDefault();
+                    await custom.UpdateAuthenticationState(new UserSession { nom = nomAdmin, role = "admin", email = check.email });
                     estLogger = true;
                 }
                 else if(estProf)
                 {
-                    var nomProf = from users in dbContext.TblProfesseurs
+                    var nomProf = (from users in dbContext.TblProfesseurs
                                    where users.CourrielProf == check.email
-                                   select users.NomProf;
-                    await custom.UpdateAuthenticationState(new UserSession { nom = nomProf.ToString(), role = "professeur" , email = check.email });
+                                   select users.NomProf).FirstOrDefault();
+                    await custom.UpdateAuthenticationState(new UserSession { nom = nomProf, role = "professeur" , email = check.email });
                     estLogger = true;
                 }
                 else

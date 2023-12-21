@@ -51,35 +51,42 @@
             <QuickGrid Items="@dataSourceCombined">
                 <PropertyColumn Property="@(e => e.NumeroDa)" Sortable="true"></PropertyColumn>
                 <PropertyColumn Property="@(e => e.NomEleve)" Sortable="true" />
-                <PropertyColumn Property="@(e => e.PrenEleve)" Sortable="true" /> 
-                    <TemplateColumn Sortable="true" Title="Note obtenue">
+                <PropertyColumn Property="@(e => e.PrenEleve)" Sortable="true" />
+
+
+                <TemplateColumn Sortable="true" Title="Note obtenue">
+
                     <div>
                         <label>
-                            <input type="text" @bind="@context.noteEleve" />
+                            <input type="text" @bind="@context.noteEleve" disabled="@isDasabled" width="10" />
                         </label>
                     </div>
-                    </TemplateColumn>
+                </TemplateColumn>
 
                 <TemplateColumn Sortable="true" Title="Note Travail">
                     <div>
                         <label>
-                            <input type="text" @bind="@context.noteTravail" />
+                            <input type="text" @bind="@context.noteTravail" disabled="@isDasabled" width="20" />
                         </label>
                     </div>
                 </TemplateColumn>
-                <TemplateColumn Sortable="true" Title="Commentaire">
-                    <div>
-                        <label>
-                            <input type="text" @bind="@context.commentaire" />
-                        </label>
-                    </div>
-                </TemplateColumn>
+
+
+
+                @* <TemplateColumn Sortable="true" Title="Commentaire">
+                <div>
+                <label>
+                <input type="text" @bind="@context.commentaire" />
+                </label>
+                </div>
+                </TemplateColumn>*@
                 <TemplateColumn Title="Actions">
-                    <button class="btn btn-info" @onclick="@(() => Edit(context))">Modifier</button>
-                    <button class="btn btn-danger" @onclick="@(() => Supprimer(context))">Supprimer</button>
+                    <button class="btn btn-none" @onclick="@(() => CheckAddNote(context))"><span class="oi oi-plus"></span></button>
+                    <button class="btn btn-none" @onclick="@(() => Update(context))"><span class="oi oi-reload"></span></button>
+                    <button class="btn btn-none" @onclick="@(() => Supprimer(context))"><span class="oi oi-trash text-danger"></span></button>
                 </TemplateColumn>
             </QuickGrid>
-           
+
         </div>
     </div>
 </div>
@@ -88,7 +95,7 @@
 
 @code {
 
-
+    private bool isDasabled { get; set; }
     private int selectedCourId { get; set; }
     private int selectedEvaluation { get; set; }
     private List<TblCour> lesCours { get; set; } = new List<TblCour>();
@@ -96,7 +103,7 @@
     private List<TblTravaux> evaluations { get; set; } = new List<TblTravaux>();
     private List<TblNote> lesNotes { get; set; } = new List<TblNote>();
     IQueryable<Combinaison> dataSourceCombined { get; set; } = Enumerable.Empty<Combinaison>().AsQueryable();
-
+    private bool noteExist { get; set; }
     private string emailProf { get; set; }
     private string type { get; set; }
     private string titre { get; set; }
@@ -109,13 +116,42 @@
 
         if (emailProf != null)
         {
-
             lesCours = await evaluationService.RemplirCoursProfesseur(emailProf);
-
         }
-
     }
 
+    void CheckAddNote(Combinaison note)
+    {
+
+        var check = (from notes in lesNotes
+                     where notes.NumeroDa == note.NumeroDa
+                     select notes).ToList();
+        try
+        {
+            bool estBonneNote = VerifierNombre(note);
+
+            if (check.Count == 0)
+            {
+                if (estBonneNote)
+                {
+                    Edit(note);
+                    JS.InvokeVoidAsync("alert", "Note ajoutée");
+                }
+                else
+                {
+                    JS.InvokeVoidAsync("alert", "La note obtenue doit etre inférieure ou égale à la note du travail");
+                }
+            }
+            else
+            {
+                JS.InvokeVoidAsync("alert", "Note déjà ajoutée");
+            }
+        }
+        catch (Exception)
+        {
+            JS.InvokeVoidAsync("alert", "Erreur");
+        }
+    }
 
     public async Task ChargerEvaluation()
     {
@@ -124,14 +160,32 @@
             evaluations = await notesService.RecupererEvaluation(selectedCourId);
             PasserValues();
         }
-
     }
+
+    public async Task<bool> VerifierNoteExiste()
+    {
+        if (selectedEvaluation != 0)
+        {
+            lesNotes = await notesService.SelectionnerNotes(selectedEvaluation);
+
+            if (lesNotes.Count < lesEtudiantCours.Count)
+            {
+                noteExist = false;
+            }
+            else
+            {
+                noteExist = true;
+            }
+        }
+        return noteExist;
+    }
+
     public async Task AfficherEtudiantCours()
     {
         if (selectedCourId != 0)
         {
             lesEtudiantCours = await notesService.RemplirEtudiant(selectedCourId);
-
+            await Disable();
         }
         dataSourceCombined = CombinezSource(lesEtudiantCours, evaluations, lesNotes);
     }
@@ -151,8 +205,6 @@
 
     public async void PasserValues()
     {
-
-
         foreach (var item in evaluations)
         {
 
@@ -160,51 +212,93 @@
             type = item.TypeTravail;
             date1 = item.DateAffectation;
             date2 = item.Echeance;
-
         }
     }
     public IQueryable<Combinaison> CombinezSource(List<TblEleve> listEleve, List<TblTravaux> listTravaux, List<TblNote> listNotes)
     {
-        var combinaison = listEleve.Select(e => new Combinaison
-            {
-                NumeroDa = e.NumeroDa,
-                NomEleve = e.NomEleve,
-                PrenEleve = e.PrenEleve,
+        //var XavierEstMeilleurProfMemeSansQueMarieReineLeDise = (from eleves in listEleve
+        //from notes in listNotes
+        //where notes.NumeroDa == eleves.NumeroDa
+        //select new Combinaison(eleves.NumeroDa, notes.NoTravail, eleves.NomEleve, eleves.PrenEleve, (short)notes.NotesEleve, (short)notes.MoyenneEleve, (short)notes.NotesTravail, notes.Commentaire)).ToList();
 
-            })
-        .Union(listNotes.Select(n => new Combinaison
-            {
+        var XavierEstMeilleurProfMemeSansQueMarieReineLeDise = (
+    from eleves in listEleve
+    join notes in listNotes on eleves.NumeroDa equals notes.NumeroDa into joinedNotes
+    from note in joinedNotes.DefaultIfEmpty()
+    select new Combinaison(
+        eleves.NumeroDa,
+        note != null ? note.NoTravail : 0, 
+        eleves.NomEleve,
+        eleves.PrenEleve,
+        note != null ? (short)note.NotesEleve : (short)0,
+        note != null ? (short)note.MoyenneEleve : (short)0,
+        note != null ? (short)note.NotesTravail : (short)0,
+        note != null ? note.Commentaire : ""
+    )
+    ).ToList();
 
-                noteEleve = (short)n.NotesEleve,
-                noteTravail =(short) n.NotesTravail,
-                moyenne = (short)n.MoyenneEleve,
-                NoTravail = n.NoTravail
-
-            }))
-        .AsQueryable();
-
-        return combinaison;
+        return XavierEstMeilleurProfMemeSansQueMarieReineLeDise.AsQueryable();
     }
 
     async Task Edit(Combinaison note)
     {
-        try
-        {
-            await notesService.AjouterNoteEleve(note.NumeroDa, selectedEvaluation, note.noteTravail, note.noteEleve,note.commentaire);
-            
-            await JS.InvokeVoidAsync("alert", "Note ajoutée");
-        }
-        catch (Exception)
-        {
-
-           await JS.InvokeVoidAsync("alert", "Erreur");
-        }
-      
+        await notesService.AjouterNoteEleve(note.NumeroDa, selectedEvaluation, note.noteTravail, note.noteEleve, note.commentaire);
     }
 
-    void Supprimer(Combinaison  note)
+    private async Task Disable()
     {
-        
+        noteExist = await VerifierNoteExiste();
+
+        if (!noteExist)
+        {
+            isDasabled = false;
+        }
+        else
+        {
+            isDasabled = true;
+        }
+    }
+
+    void Supprimer(Combinaison note)
+    {
+
+    }
+    void Update(Combinaison note)
+    {
+        var check = (from notes in lesNotes
+                     where notes.NumeroDa == note.NumeroDa
+                     select notes).ToList();
+
+        bool estBonNombre = VerifierNombre(note);
+
+        if (check.Count == 1)
+        {
+            if (estBonNombre)
+            {
+                notesService.UpdateNote(note.NumeroDa, note.noteEleve);
+                JS.InvokeVoidAsync("alert", "La note a été bien modifiée");
+            }
+            else
+            {
+                JS.InvokeVoidAsync("alert", "La note obtenue doit etre inférieure ou égale à la note du travail");
+            }          
+        }
+        else
+        {
+            JS.InvokeVoidAsync("alert", "Il y a eu une erreur lors de la modification de la note");
+        }
+    }
+
+    bool VerifierNombre(Combinaison note)
+    {
+        if (note.noteEleve <= note.noteTravail)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
 }

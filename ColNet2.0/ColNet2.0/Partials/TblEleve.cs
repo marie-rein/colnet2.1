@@ -16,6 +16,7 @@ namespace ColNet2._0.Models
 
         [NotMapped]
         public string codeRegional { get; set; }
+        [NotMapped]
         public string TypeTravail { get; internal set; }
     }
 }

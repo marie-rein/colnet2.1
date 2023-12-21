@@ -15,6 +15,17 @@
         public short moyenne { get; set; }
         public short noteTravail { get; set; }
         public string commentaire { get; set; }
-
+        public Combinaison() { }
+        public Combinaison(int numeroDa, int noTravail, string nomEleve, string prenEleve, short noteEleve, short moyenne, short noteTravail, string commentaire)
+        {
+            NumeroDa = numeroDa;
+            NoTravail = noTravail;
+            NomEleve = nomEleve;
+            PrenEleve = prenEleve;
+            this.noteEleve = noteEleve;
+            this.moyenne = moyenne;
+            this.noteTravail = noteTravail;
+            this.commentaire = commentaire;
+        }
     }
 }

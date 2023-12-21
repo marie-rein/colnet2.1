@@ -30,48 +30,7 @@ namespace ColNet2._0.Services
         public leService(IDbContextFactory<_2023Prog3WilliamMarieReineContext> factory)
         {
             _factory = factory;
-            // _userManager = userManager;
-
         }
-
-
-        //public async Task<string> VerifieEmail(string email)
-        //{
-        //    var dbContext = _factory.CreateDbContextAsync().Result;
-
-        //    var estAdmin = dbContext.TblAdmins.Any(admin => admin.CourrielAdmin == email);
-        //    var estEtud = dbContext.TblEleves.Any(student => student.CourrielEleve == email);
-        //    var estProf = dbContext.TblProfesseurs.Any(prof => prof.CourrielProf == email);
-
-        //    var param1 = new SqlParameter("@courrielParam", email);
-
-        //    if (estAdmin)
-        //    {
-        //        var adminEmail = from admin in dbContext.TblAdmins
-        //                         where admin.CourrielAdmin == email
-        //                         select admin.CourrielAdmin;
-        //        return adminEmail.ToString();
-        //    }
-        //    else if (estEtud)
-        //    {
-        //        var etuEmail = from etudiant in dbContext.TblEleves
-        //                       where etudiant.CourrielEleve == email
-        //                       select etudiant.CourrielEleve;
-        //        return etuEmail.ToString();
-        //    }
-        //    else if (estProf)
-        //    {
-        //        var profEmail = from prof in dbContext.TblProfesseurs
-        //                        where prof.CourrielProf == email
-        //                        select prof.CourrielProf;
-        //        return profEmail.ToString();
-        //    }
-        //    else
-        //    {
-        //        return null;
-        //    }
-
-        //}
 
         public async Task<string> VerifieEmail(string email)
         {
@@ -119,7 +78,6 @@ namespace ColNet2._0.Services
                 if (IsValidEmail(email))
                 {
                      expirationToken = GenerateExpirationToken();
-                    //string resetLink = $"{navManager.BaseUri}resetPassword/"; // The link without the token
 
                     string emailBody = $"Clicker <a href='{link}'> <strong>ICI</strong> </a> pour changer votre mot de passe. Voici le code de vérification : {HttpUtility.UrlEncode(expirationToken)}";
 
@@ -134,10 +92,6 @@ namespace ColNet2._0.Services
             }
             return emailSent;
         }
-
-       
-
-
 
         private async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
@@ -158,7 +112,7 @@ namespace ColNet2._0.Services
         }
         public string  GenerateExpirationToken()
         {
-           // DateTime expirationTime = DateTime.Now.AddMinutes(30);
+           
             string numericToken = GenerateNumericToken(5); 
             return numericToken;
         }
