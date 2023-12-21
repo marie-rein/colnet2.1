@@ -140,6 +140,8 @@
                 else
                 {
                     JS.InvokeVoidAsync("alert", "La note obtenue doit etre inférieure ou égale à la note du travail");
+                    note.noteEleve = 0;
+                    note.noteTravail = 0;
                 }
             }
             else
@@ -281,6 +283,8 @@
             else
             {
                 JS.InvokeVoidAsync("alert", "La note obtenue doit etre inférieure ou égale à la note du travail");
+                note.noteEleve = 0;
+                note.noteTravail = 0;
             }          
         }
         else
