@@ -144,10 +144,8 @@ namespace ColNet2._0.Services
             }
 
             try
-            {
-               
-                string pattern = "^[0-9]+@[^\\s@]+\\.[^\\s@]+$";
-               
+            {  
+                string pattern = "^[0-9]+@[^\\s@]+\\.[^\\s@]+$";  
                 return Regex.IsMatch(email,pattern);
             }
             catch

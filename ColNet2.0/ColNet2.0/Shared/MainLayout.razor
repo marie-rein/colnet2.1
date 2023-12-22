@@ -15,11 +15,11 @@
             <img src="/images/colnet.png" asp-append-version="true" width="140px" alt="non trouvé" class="mx-auto d-block" />
             <AuthorizeView>
                 <Authorized>
-                    <a @onclick="Logout" href="javascript:void(0)">Logout</a>
+                    <a class="oi oi-account-logout text-uppercase" @onclick="Logout" href="javascript:void(0)"> Logout</a>
                 </Authorized>
                 <NotAuthorized>
                     <NavLink class="nav-link" href="login">
-                        <span class="oi oi-power-standby " aria-hidden="true"></span> Login
+                        <span class="oi oi-account-login" aria-hidden="true"></span> LOGIN
                     </NavLink>
                 </NotAuthorized>
             </AuthorizeView>

@@ -10,7 +10,7 @@ namespace ColNet2._0.Models;
 [Table("tblNotes")]
 public partial class TblNote
 {
-    internal string typeTravail;
+    
 
     [Key]
     [Column("noTravail")]

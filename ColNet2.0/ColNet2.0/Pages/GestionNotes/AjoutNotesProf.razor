@@ -123,12 +123,11 @@
     void CheckAddNote(Combinaison note)
     {
 
-        var check = (from notes in lesNotes
-                     where notes.NumeroDa == note.NumeroDa
-                     select notes).ToList();
+        var check = GetNote(note);
+
         try
         {
-            bool estBonneNote = VerifierNombre(note);
+             bool estBonneNote = VerifierNombre(note);
 
             if (check.Count == 0)
             {
@@ -139,20 +138,30 @@
                 }
                 else
                 {
-                    JS.InvokeVoidAsync("alert", "La note obtenue doit etre inférieure ou égale à la note du travail");
+                    JS.InvokeVoidAsync("alert", "Une erreur est survenue,La note travail ne doit pas etre inférieur ou égale à 0 et inférieure à la note de l'étudiant \net/ou la note existe déjà ");
                     note.noteEleve = 0;
                     note.noteTravail = 0;
                 }
             }
             else
             {
-                JS.InvokeVoidAsync("alert", "Note déjà ajoutée");
+                JS.InvokeVoidAsync("alert", "Une erreur est survenue,La note travail ne doit pas etre inférieur ou égale à 0 et/ou la note existe déjà ");
             }
         }
         catch (Exception)
         {
             JS.InvokeVoidAsync("alert", "Erreur");
         }
+    }
+
+    public List<TblNote> GetNote(Combinaison note)
+    {
+
+        var check = (from notes in lesNotes
+                     where notes.NumeroDa == note.NumeroDa
+                     select notes).ToList();
+
+        return check;
     }
 
     public async Task ChargerEvaluation()
@@ -191,19 +200,6 @@
         }
         dataSourceCombined = CombinezSource(lesEtudiantCours, evaluations, lesNotes);
     }
-
-    //private void OnCoursSelectionChanged(ChangeEventArgs args)
-    //{
-    //    if (int.TryParse(args.Value.ToString(), out int selectedId))
-    //    {
-    //        evaluationsFiltrees = evaluations.Where(e => e.NoCours == selectedId).ToList();
-    //        // Assurez-vous d'adapter la logique selon la structure de vos classes
-    //    }
-    //    else
-    //    {
-    //        evaluationsFiltrees = new List<TblTravaux>();
-    //    }
-    //}
 
     public async void PasserValues()
     {
@@ -263,13 +259,23 @@
 
     void Supprimer(Combinaison note)
     {
+        var check = GetNote(note);
 
+        if (check.Count == 1)
+        {
+            notesService.DeleteNote(note.NumeroDa);
+            JS.InvokeVoidAsync("alert", "La note a été bien supprimée");
+            note.noteEleve = 0;
+            note.noteTravail = 0;
+        }
+        else
+        {
+            JS.InvokeVoidAsync("alert", "Une erreur est survenue, réesaye plus tard");
+        }
     }
     void Update(Combinaison note)
     {
-        var check = (from notes in lesNotes
-                     where notes.NumeroDa == note.NumeroDa
-                     select notes).ToList();
+        var check = GetNote(note);
 
         bool estBonNombre = VerifierNombre(note);
 
@@ -295,7 +301,7 @@
 
     bool VerifierNombre(Combinaison note)
     {
-        if (note.noteEleve <= note.noteTravail)
+        if ((note.noteEleve <= note.noteTravail) && note.noteTravail != 0)
         {
             return true;
         }

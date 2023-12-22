@@ -15,14 +15,19 @@ namespace ColNet2._0.Services
             _factory = factory;
         }
 
-        public async Task<List<TblCour>> RemplirCours()
+        public async Task<List<TblCour>> RemplirCours(string email)
         {
             var dbContext = _factory.CreateDbContextAsync().Result;
+            var param1 = new SqlParameter("CourrielEleve", email);
+            ////var cours = dbContext.Set<TblCour>()
+            ////    .FromSqlRaw("SELECT * FROM tblCour where ");
 
-            var cours = dbContext.Set<TblCour>()
-                .FromSqlRaw("SELECT * FROM tblCour");
+            var coursEleve = (from cours in dbContext.TblCours
+                            from eleve in cours.NumeroDa
+                            where eleve.CourrielEleve == email
+                            select cours).ToListAsync();
 
-            return await cours.ToListAsync();
+            return await coursEleve;
         }
         public async Task<List<TblNote>> AfficherNotesEleve(int noCours, string email)
         {
@@ -39,7 +44,7 @@ namespace ColNet2._0.Services
                          join cour in dbContext.TblCours on travail.NoCours equals cour.NoCour
                          join eleve in dbContext.TblEleves on note.NumeroDa equals eleve.NumeroDa
                          where eleve.CourrielEleve == email && cour.NoCour == noCours
-                         select new TblNote { NotesEleve = note.NotesEleve, MoyenneEleve = note.MoyenneEleve, NotesTravail = note.NotesTravail, Commentaire = note.Commentaire }).ToListAsync();
+                         select new TblNote {TypeTravail= travail.TypeTravail,Evaluation = travail.Titre,DateAssigne = travail.DateAffectation,Echeance = travail.Echeance, NotesEleve = note.NotesEleve, MoyenneEleve = note.MoyenneEleve, NotesTravail = note.NotesTravail, Commentaire = note.Commentaire }).ToListAsync();
 
             //var typeTravail = from travail in dbContext.TblTravauxes
             return await notes;
@@ -119,6 +124,21 @@ namespace ColNet2._0.Services
 
             dbContext.SaveChangesAsync();
 
+        }
+
+        public void DeleteNote(int numeroDa)
+        {
+            var dbContext = _factory.CreateDbContextAsync().Result;
+
+            var deleteNote = from note in dbContext.TblNotes
+                             where note.NumeroDa == numeroDa
+                             select note;
+
+            foreach (var note in deleteNote)
+            {
+                dbContext.TblNotes.Remove(note);
+            }
+            dbContext.SaveChangesAsync();
         }
 
     }

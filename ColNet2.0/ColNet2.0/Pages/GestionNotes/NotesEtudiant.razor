@@ -32,7 +32,7 @@
                 <th scope="col">Date due</th>
                 <th scope="col">Résultat</th>
                 <th scope="col">Moyenne de la classe</th>
-                <th scope="col">Pourcentage</th>
+                <th scope="col">Note Travail</th>
                 <th scope="col">Commentaires</th>
             </tr>
         </thead>
@@ -40,7 +40,10 @@
             @foreach (var note in lesNotes)
             {
                 <tr>
-                    <td>@note.typeTravail</td>
+                    <td>@note.TypeTravail</td>
+                    <td>@note.Evaluation</td>
+                    <td>@note.DateAssigne.ToShortDateString()</td>
+                    <td>@note.Echeance.ToShortDateString()</td>
                     <td>@note.NotesEleve</td>
                     <td>@note.MoyenneEleve</td>
                     <td>@note.NotesTravail</td>
@@ -64,11 +67,12 @@
 
     private int selectedCourId { get; set; }
     protected override async Task OnInitializedAsync()
-    {
-        lesCours = await notesService.RemplirCours();
-
+    {       
         emailEtudiant = await userLogged.GetUserEmail();
-
+        if (emailEtudiant != null)
+        {
+            lesCours = await notesService.RemplirCours(emailEtudiant);
+        }
     }
 
     public async Task AfficherNotes()
