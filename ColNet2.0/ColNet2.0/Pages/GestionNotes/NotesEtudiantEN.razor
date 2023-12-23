@@ -1,0 +1,85 @@
+﻿@page "/notesEleveEN"
+@using ColNet2._0.Services
+@using ColNet2._0.Data
+@using ColNet2._0.Models
+@using ColNet2._0.CustomModels
+@using System.Security.Claims;
+@inject NotesService notesService
+@inject GetLoggedUser userLogged
+
+<h3>StudentNotes</h3>
+
+<div>
+    <select @bind="selectedCourId" class="form-control">
+        <option>Select a course</option>
+
+        @foreach (var cour in lesCours)
+        {
+            <option value="@cour.NoCour">@cour.NomCour</option>
+        }
+    </select>
+</div>
+<div>
+    <button type="submit" @onclick="AfficherNotes">Showcase</button>
+</div>
+<div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Evaluation</th>
+                <th scope="col">Date assigned</th>
+                <th scope="col">Return date</th>
+                <th scope="col">Result</th>
+                <th scope="col">Class average</th>
+                <th scope="col">Work note</th>
+                <th scope="col">Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var note in lesNotes)
+            {
+                <tr>
+                    <td>@note.TypeTravail</td>
+                    <td>@note.Evaluation</td>
+                    <td>@note.DateAssigne.ToShortDateString()</td>
+                    <td>@note.Echeance.ToShortDateString()</td>
+                    <td>@note.NotesEleve</td>
+                    <td>@note.MoyenneEleve</td>
+                    <td>@note.NotesTravail</td>
+                    <td>@note.Commentaire</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+
+    private List<TblCour> lesCours { get; set; } = new List<TblCour>();
+    private List<TblNote> lesNotes { get; set; } = new List<TblNote>();
+
+
+
+    private string emailEtudiant { get; set; }
+    //private string nomEtu { get; set; }
+
+    private int selectedCourId { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        emailEtudiant = await userLogged.GetUserEmail();
+        if (emailEtudiant != null)
+        {
+            lesCours = await notesService.RemplirCours(emailEtudiant);
+        }
+    }
+
+    public async Task AfficherNotes()
+    {
+        if (selectedCourId != 0 && emailEtudiant != null)
+        {
+            lesNotes = await notesService.AfficherNotesEleve(selectedCourId, emailEtudiant);
+        }
+    }
+}

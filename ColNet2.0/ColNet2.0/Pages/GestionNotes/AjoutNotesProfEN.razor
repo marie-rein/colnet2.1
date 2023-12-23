@@ -1,0 +1,315 @@
+﻿@page "/ajoutNotesEtudiantEN"
+@using ColNet2._0.Services
+@using ColNet2._0.Data
+@using ColNet2._0.Models
+@using ColNet2._0.CustomModels
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@using Syncfusion.Blazor.Grids;
+@using Syncfusion.Blazor.Buttons
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject NotesService notesService
+@inject GetLoggedUser loggedUser
+@inject AjoutEvaluationService evaluationService
+@inject AuthenticationStateProvider authProvider
+@inject IJSRuntime JS
+
+
+<h3>TeacherNoteAdd</h3>
+
+
+<div>
+    <div class="row">
+        <div class="col-md-6 mb-4 pb-2">
+            <select @bind="selectedCourId" class="form-control">
+                <option>Selectionner un cours</option>
+
+                @foreach (var cour in lesCours)
+                {
+                    <option value="@cour.NoCour">@cour.NomCour</option>
+                }
+            </select>
+            <button @onclick="ChargerEvaluation" type="submit">Load Evaluation</button>
+        </div>
+
+        <div class="col-md-6 mb-4 pb-2">
+            <select @bind="selectedEvaluation" class="form-control">
+                <option>Select a work</option>
+
+                @foreach (var travail in evaluations)
+                {
+                    <option value="@travail.NoTravail">@travail.TypeTravail</option>
+                }
+            </select>
+            <button @onclick="AfficherEtudiantCours" type="submit">Show Evaluations</button>
+        </div>
+
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <QuickGrid Items="@dataSourceCombined">
+                <PropertyColumn Property="@(e => e.NumeroDa)" Sortable="true"></PropertyColumn>
+                <PropertyColumn Property="@(e => e.NomEleve)" Sortable="true" />
+                <PropertyColumn Property="@(e => e.PrenEleve)" Sortable="true" />
+
+
+                <TemplateColumn Sortable="true" Title="Note obtain">
+
+                    <div>
+                        <label>
+                            <input type="text" @bind="@context.noteEleve" disabled="@isDasabled" width="10" />
+                        </label>
+                    </div>
+                </TemplateColumn>
+
+                <TemplateColumn Sortable="true" Title="Work note">
+                    <div>
+                        <label>
+                            <input type="text" @bind="@context.noteTravail" disabled="@isDasabled" width="20" />
+                        </label>
+                    </div>
+                </TemplateColumn>
+
+
+
+                @* <TemplateColumn Sortable="true" Title="Commentaire">
+                <div>
+                <label>
+                <input type="text" @bind="@context.commentaire" />
+                </label>
+                </div>
+                </TemplateColumn>*@
+                <TemplateColumn Title="Actions">
+                    <button class="btn btn-none" @onclick="@(() => CheckAddNote(context))"><span class="oi oi-plus"></span></button>
+                    <button class="btn btn-none" @onclick="@(() => Update(context))"><span class="oi oi-reload"></span></button>
+                    <button class="btn btn-none" @onclick="@(() => Supprimer(context))"><span class="oi oi-trash text-danger"></span></button>
+                </TemplateColumn>
+            </QuickGrid>
+
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+
+    private bool isDasabled { get; set; }
+    private int selectedCourId { get; set; }
+    private int selectedEvaluation { get; set; }
+    private List<TblCour> lesCours { get; set; } = new List<TblCour>();
+    private List<TblEleve> lesEtudiantCours { get; set; } = new List<TblEleve>();
+    private List<TblTravaux> evaluations { get; set; } = new List<TblTravaux>();
+    private List<TblNote> lesNotes { get; set; } = new List<TblNote>();
+    IQueryable<Combinaison> dataSourceCombined { get; set; } = Enumerable.Empty<Combinaison>().AsQueryable();
+    private bool noteExist { get; set; }
+    private string emailProf { get; set; }
+    private string type { get; set; }
+    private string titre { get; set; }
+    private DateTime date1 { get; set; }
+    private DateTime date2 { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        emailProf = await loggedUser.GetUserEmail();
+
+        if (emailProf != null)
+        {
+            lesCours = await evaluationService.RemplirCoursProfesseur(emailProf);
+        }
+    }
+
+    void CheckAddNote(Combinaison note)
+    {
+
+        var check = GetNote(note);
+
+        try
+        {
+            bool estBonneNote = VerifierNombre(note);
+
+            if (check.Count == 0)
+            {
+                if (estBonneNote)
+                {
+                    Edit(note);
+                    JS.InvokeVoidAsync("alert", "Note added");
+                }
+                else
+                {
+                    JS.InvokeVoidAsync("alert", "An error has occurred,The work grade must not be less than or equal to 0 and less than the student's grade and/or the grade already exists. ");
+                    note.noteEleve = 0;
+                    note.noteTravail = 0;
+                }
+            }
+            else
+            {
+                JS.InvokeVoidAsync("alert", "An error has occurred,The work grade must not be less than or equal to 0 and/or the grade already exists. ");
+            }
+        }
+        catch (Exception)
+        {
+            JS.InvokeVoidAsync("alert", "Error");
+        }
+    }
+
+    public List<TblNote> GetNote(Combinaison note)
+    {
+
+        var check = (from notes in lesNotes
+                     where notes.NumeroDa == note.NumeroDa
+                     select notes).ToList();
+
+        return check;
+    }
+
+    public async Task ChargerEvaluation()
+    {
+        if (selectedCourId != 0)
+        {
+            evaluations = await notesService.RecupererEvaluation(selectedCourId);
+            PasserValues();
+        }
+    }
+
+    public async Task<bool> VerifierNoteExiste()
+    {
+        if (selectedEvaluation != 0)
+        {
+            lesNotes = await notesService.SelectionnerNotes(selectedEvaluation);
+
+            if (lesNotes.Count < lesEtudiantCours.Count)
+            {
+                noteExist = false;
+            }
+            else
+            {
+                noteExist = true;
+            }
+        }
+        return noteExist;
+    }
+
+    public async Task AfficherEtudiantCours()
+    {
+        if (selectedCourId != 0)
+        {
+            lesEtudiantCours = await notesService.RemplirEtudiant(selectedCourId);
+            await Disable();
+        }
+        dataSourceCombined = CombinezSource(lesEtudiantCours, evaluations, lesNotes);
+    }
+
+    public async void PasserValues()
+    {
+        foreach (var item in evaluations)
+        {
+
+            titre = item.Titre;
+            type = item.TypeTravail;
+            date1 = item.DateAffectation;
+            date2 = item.Echeance;
+        }
+    }
+    public IQueryable<Combinaison> CombinezSource(List<TblEleve> listEleve, List<TblTravaux> listTravaux, List<TblNote> listNotes)
+    {
+        //var XavierEstMeilleurProfMemeSansQueMarieReineLeDise = (from eleves in listEleve
+        //from notes in listNotes
+        //where notes.NumeroDa == eleves.NumeroDa
+        //select new Combinaison(eleves.NumeroDa, notes.NoTravail, eleves.NomEleve, eleves.PrenEleve, (short)notes.NotesEleve, (short)notes.MoyenneEleve, (short)notes.NotesTravail, notes.Commentaire)).ToList();
+
+        var XavierEstMeilleurProfMemeSansQueMarieReineLeDise = (
+    from eleves in listEleve
+    join notes in listNotes on eleves.NumeroDa equals notes.NumeroDa into joinedNotes
+    from note in joinedNotes.DefaultIfEmpty()
+    select new Combinaison(
+        eleves.NumeroDa,
+        note != null ? note.NoTravail : 0,
+        eleves.NomEleve,
+        eleves.PrenEleve,
+        note != null ? (short)note.NotesEleve : (short)0,
+        note != null ? (short)note.MoyenneEleve : (short)0,
+        note != null ? (short)note.NotesTravail : (short)0,
+        note != null ? note.Commentaire : ""
+    )
+    ).ToList();
+
+        return XavierEstMeilleurProfMemeSansQueMarieReineLeDise.AsQueryable();
+    }
+
+    async Task Edit(Combinaison note)
+    {
+        await notesService.AjouterNoteEleve(note.NumeroDa, selectedEvaluation, note.noteTravail, note.noteEleve, note.commentaire);
+    }
+
+    private async Task Disable()
+    {
+        noteExist = await VerifierNoteExiste();
+
+        if (!noteExist)
+        {
+            isDasabled = false;
+        }
+        else
+        {
+            isDasabled = true;
+        }
+    }
+
+    void Supprimer(Combinaison note)
+    {
+        var check = GetNote(note);
+
+        if (check.Count == 1)
+        {
+            notesService.DeleteNote(note.NumeroDa);
+            JS.InvokeVoidAsync("alert", "The note has been deleted");
+            note.noteEleve = 0;
+            note.noteTravail = 0;
+        }
+        else
+        {
+            JS.InvokeVoidAsync("alert", "An error has occurred, try again later");
+        }
+    }
+    void Update(Combinaison note)
+    {
+        var check = GetNote(note);
+
+        bool estBonNombre = VerifierNombre(note);
+
+        if (check.Count == 1)
+        {
+            if (estBonNombre)
+            {
+                notesService.UpdateNote(note.NumeroDa, note.noteEleve);
+                JS.InvokeVoidAsync("alert", "The note has been modified");
+            }
+            else
+            {
+                JS.InvokeVoidAsync("alert", "The mark obtained must be less than or equal to the mark for the job.");
+                note.noteEleve = 0;
+                note.noteTravail = 0;
+            }
+        }
+        else
+        {
+            JS.InvokeVoidAsync("alert", "There was an error when modifying the note");
+        }
+    }
+
+    bool VerifierNombre(Combinaison note)
+    {
+        if ((note.noteEleve <= note.noteTravail) && note.noteTravail != 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+}
+

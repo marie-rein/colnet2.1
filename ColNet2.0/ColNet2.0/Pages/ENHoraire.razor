@@ -1,0 +1,136 @@
+﻿@page "/HoraireEN"
+@using ColNet2._0.Services;
+@using ColNet2._0.Models;
+@using ColNet2._0.CustomModels;
+@inject HoraireService serviceHoraire;
+@inject GetLoggedUser userLogger
+
+<PageTitle>Emploie Du Temps</PageTitle>
+
+@*@foreach (var jourEmploiDuTemps in emploisDuTemps)
+{*@
+<div class="jour-emploi-du-temps">
+    @*<h4>@jourEmploiDuTemps.JourSemaine</h4>*@
+    <div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Class Name </th>
+                    <th scope="col">Session </th>
+                    <th scope="col">Start Time</th>
+                    <th scope="col">Finish Time</th>
+                    <th scope="col">Classroom</th>
+                    <th scope="col">Days</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var jour in new List<string> { "lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi" })
+                {
+                    @foreach (var periode in periodeList.Where(p => p.Jours == jour))
+                    {
+                        <tr>
+                            <td>@periode.NomCour</td>
+                            <td>@periode.Session</td>
+                            <td>@periode.HeureDebut</td>
+                            <td>@periode.HeureFin</td>
+                            <td>@periode.Locale</td>
+
+                            @switch (@periode.Jours)
+                            {
+                                case "lundi":
+                                    <td>Monday</td>
+                                    break;
+                                case "Mardi":
+                                    <td>Tuesday</td>
+                                    break;
+                                case "Mercredi":
+                                    <td>Wednesday</td>
+                                    break;
+                                case "Jeudi":
+                                    <td>Thursday</td>
+                                    break;
+                                case "Vendredi":
+                                    <td>Friday</td>
+                                    break;
+                            }
+                        </tr>
+                    }
+
+                }
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+@*}*@
+
+@code {
+    private List<JourEmploiDuTemps>
+    emploisDuTemps = new List<JourEmploiDuTemps>
+        ();
+        private List<VueHoraire>
+            periodeList { get; set; } = new List<VueHoraire>
+                ();
+
+                private string emailEtudiant = string.Empty;
+
+                private string message = string.Empty;
+
+                protected override async Task OnInitializedAsync()
+                {
+                emailEtudiant = await userLogger.GetUserEmail();
+
+                if (emailEtudiant != null)
+                {
+                periodeList = await serviceHoraire.RemplirProgramme(emailEtudiant);
+                }
+
+                //emploisDuTemps = await GetEmploiDuTemps();
+                }
+
+                //private async Task<List<JourEmploiDuTemps>> GetEmploiDuTemps()
+    //{
+    //    programme = await serviceHoraire.RemplirProgramme();
+
+    //    return  new JourEmploiDuTemps(programme);
+    //}
+
+    public async Task chargerHoraire()
+    {
+        try
+        {
+
+            message = "Évaluation ajoutée avec succès";
+
+        }
+        catch (Exception)
+        {
+            message = "Erreur survenue. l'horaire n'a pas réussi a charger. Veillez réesayer plus tard ";
+
+        }
+
+    }
+    public class JourEmploiDuTemps
+    {
+        public string JourSemaine { get; set; }
+        public List<Periode> Periodes { get; set; } = new List<Periode>();
+
+        public JourEmploiDuTemps(List<TblProgramme> programme)
+        {
+            programme = new List<TblProgramme>();
+        }
+    }
+
+    public class Periode
+    {
+        public int nomCour { get; set; }
+        public string session { get; set; }
+        public string HeureDebut { get; set; }
+        public string heureFin { get; set; }
+        public string Jours { get; set; }
+        public string locale { get; set; }
+    }
+}

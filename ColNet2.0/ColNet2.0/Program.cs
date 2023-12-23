@@ -41,7 +41,7 @@ builder.Services.AddScoped<AjoutUtilisateurService>();
 builder.Services.AddScoped<NotesService>();
 builder.Services.AddScoped<AjoutEvaluationService>();
 builder.Services.AddScoped<GetLoggedUser>();
-
+builder.Services.AddScoped<HoraireService>();
 
 
 

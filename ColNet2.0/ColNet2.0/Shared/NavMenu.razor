@@ -1,4 +1,5 @@
-﻿ <div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager NavigationManager;
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">ColNet</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -24,7 +25,6 @@
                         <span class="oi oi-home" aria-hidden="true"></span> Home
                     </NavLink>
                 </div>
-            
      
            <AuthorizeView Roles="professeur,admin">
                <Authorized>
@@ -38,8 +38,14 @@
                         <span class="oi oi-plus" aria-hidden="true"></span> Ajouter évaluation
                     </NavLink>
                 </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Horaire">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Horaire
+                    </NavLink>
+                </div>
                </Authorized>
            </AuthorizeView>
+
            <AuthorizeView Roles="admin">
                <Authorized>
                 <div class="nav-item px-3">
@@ -49,12 +55,17 @@
                 </div>
                </Authorized>
            </AuthorizeView>
-           
+  
             <AuthorizeView Roles="etudiant">
                 <Authorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="notesEleve">
                         <span class="oi oi-plus" aria-hidden="true"></span> Notes Eleve
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="Horaire">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Horaire
                     </NavLink>
                 </div>
                 </Authorized>
@@ -67,6 +78,9 @@
 </div>
 
 @code {
+    
+
+
     private bool collapseNavMenu = true;
     private bool expandMenu;
 

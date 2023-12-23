@@ -1,0 +1,307 @@
+﻿@using ColNet2._0.Services
+@using ColNet2._0.Data
+@using ColNet2._0.Models
+@using ColNet2._0.CustomModels
+@inject AjoutUtilisateurService ajoutservice
+@using System.ComponentModel.DataAnnotations
+@inject IJSRuntime js
+
+
+<section class="h-100 h-custom bg-info.bg-gradient bg-im">
+    <h2>ADD USER</h2>
+    <div class="container py-5 h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col-12">
+                <div class="card card-registration card-registration-2" style="border-radius: 15px;">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <div class="col-lg-6">
+                                <EditForm Model="@ajoutClassProperty" OnValidSubmit="@AddUser">
+                                    <DataAnnotationsValidator />
+                                    <div class="p-5">
+                                        <h3 class="fw-normal mb-5" style="color: #4835d4;">Infomation Générale</h3>
+
+                                        <div class="row">
+
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline">
+                                                    <label class="form-label" for="form3Examplev2">Name</label>
+                                                    <InputText id="form3Examplev2" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.Nom" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.Nom)" />
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline">
+                                                    <label class="form-label" for="form3Examplev3">First Name</label>
+                                                    <InputText id="form3Examplev3" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.Prenom" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.Prenom)" />
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-5 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <label class="form-label" for="form3Examplea7">Code +</label>
+                                                    <input type="text" id="form3Examplea7" class="form-control form-control-lg" @bind-value="ajoutClassProperty.Code" />
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-7 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <label class="form-label" for="form3Examplea8">Phone Number</label>
+                                                    <InputText id="form3Examplea8" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.NumTel" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.NumTel)" />
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="typeUser" id="admin" value="Admin" onchange="@(() =>UpdateUserType("Admin"))" checked="@(userType == "Admin")" @oninput="Disable">
+                                                    <label class="form-check-label" for="admin">
+                                                        Administrator
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="typeUser" id="prof" onchange="@(() =>UpdateUserType("Professeur"))" checked="@(userType == "Professeur")" @oninput="Disable">
+                                                    <label class="form-check-label" for="prof">
+                                                        Teacher
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="typeUser" id="etudiant" onchange="@(() =>UpdateUserType("Etudiant"))" checked="@(userType == "Etudiant")" @oninput="Disable">
+                                                    <label class="form-check-label" for="etudiant">
+                                                        Student
+                                                    </label>
+                                                </div>
+                                            </div>
+
+
+
+                                            <div class="col-md-6">
+                                                <label class="form-check-label">
+                                                    Select a Program
+                                                </label>
+                                                <select @bind="selectedProgrammeId" class="form-control" disabled="@isDasabled">
+                                                    <option value="">Select a Program</option>
+                                                    @if (userType == "Etudiant")
+                                                    {
+                                                        @foreach (var programme in listProgs)
+                                                        {
+                                                            <option value="@programme.NoProgramme">@programme.NomProgramme</option>
+                                                        }
+
+                                                    }
+
+                                                </select>
+                                            </div>
+
+                                            <dvi>
+                                                <span style="color:red">@message</span>
+                                            </dvi>
+
+
+                                        </div>
+
+                                    </div>
+                                </EditForm>
+                            </div>
+                            <div class="col-lg-6 text-white" style="background-color:#8c8cd9">
+                                <EditForm Model="@ajoutClassProperty" OnValidSubmit="@AddUser">
+                                    <DataAnnotationsValidator />
+                                    <div class="p-5">
+                                        <h3 class="fw-normal mb-5">Détails du Contact</h3>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-4 pb-2">
+                                                <div class="form-outline form-white">
+                                                    <label class="form-label" for="form3Examplea9">Street Name</label>
+                                                    <InputText id="form3Examplea9" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.NomRue" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.NomRue)" />
+
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6 mb-4 pb-2">
+                                                <div class="form-outline form-white">
+                                                    <label class="form-label" for="form3Examplea2">Street Number</label>
+                                                    <InputNumber id="form3Examplea2" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.NumRue" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.NumRue)" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <label class="form-label" for="form3Examplea5">City Name</label>
+                                                    <InputText id="form3Examplea5" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.NomVille" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.NomVille)" />
+                                                </div>
+
+                                            </div>
+                                            <div class="col-md-6 mb-4 pb-2">
+
+                                                <div class="form-outline form-white">
+                                                    <label class="form-label" for="form3Examplea6">Country</label>
+                                                    <InputText id="form3Examplea6" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.pays" />
+                                                    <ValidationMessage For="@(() => ajoutClassProperty.pays)" />
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+
+
+
+                                        <div class="mb-4 pb-2">
+                                            <div class="form-outline form-white">
+                                                <label class="form-label" for="form3Examplea6">Password</label>
+                                                <InputText type="password" id="form3Examplea6" class="form-control form-control-lg" @bind-Value="ajoutClassProperty.password" />
+                                                <ValidationMessage For="@(() => ajoutClassProperty.password)" />
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-light btn-lg float-right"
+                                                data-mdb-ripple-color="dark">
+                                            Save
+                                        </button>
+
+                                    </div>
+                                </EditForm>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+@code {
+
+    private List<TblEleve> eleveList { get; set; } = new List<TblEleve>();
+    private List<TblProfesseur> profList { get; set; } = new List<TblProfesseur>();
+    private List<TblAdmin> adminList { get; set; } = new List<TblAdmin>();
+    private AjoutClassProperty ajoutClassProperty = new AjoutClassProperty();
+    private TblEleve eleve = new TblEleve();
+    private TblAdmin admin = new TblAdmin();
+    private TblProfesseur prof = new TblProfesseur();
+    private string message = string.Empty;
+    private bool isDasabled { get; set; }
+    private int selectedProgrammeId { get; set; }
+    private List<TblProgramme> listProgs { get; set; } = new List<TblProgramme>();
+
+    bool estAjouter { get; set; }
+
+    private string userType = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        listProgs = await ajoutservice.RemplirProgramme();
+
+    }
+    private async Task AddUser()
+    {
+
+        if (userType == "Etudiant")
+        {
+
+            eleve = ajoutClassProperty.ToEleve();
+
+
+            estAjouter = await ajoutservice.AjouterEtudiant(eleve.NomEleve, eleve.PrenEleve, eleve.codeRegional, eleve.TelEleve, eleve.VilleEleve, eleve.NoRueEleve, eleve.NomRueEleve, selectedProgrammeId, eleve.Pays, eleve.password);
+
+            if (estAjouter)
+            {
+                message = "Student add with succes";
+                ViderMessage();
+            }
+            else
+            {
+                message = "An error has occured, please try again later!";
+            }
+
+        }
+        else if (userType == "Professeur")
+        {
+
+            prof = ajoutClassProperty.ToProf();
+
+            estAjouter = await ajoutservice.AjouterProf(prof.NomProf, prof.PrenProf, prof.codeRegional, prof.TelProf, prof.VilleProf, prof.NoRueProf, prof.NomRueProf, prof.Pays, prof.password);
+
+            if (estAjouter)
+            {
+                message = "Teacher add with succes";
+                ViderMessage();
+
+            }
+            else
+            {
+                message = "An error has occured, please try again later!";
+            }
+        }
+        else if (userType == "Admin")
+        {
+
+            admin = ajoutClassProperty.ToAdmin();
+
+            estAjouter = await ajoutservice.AjouterAdmin(admin.NomAdmin, admin.PrenAdmin, admin.codeRegional, admin.NumTelAdmin, admin.VilleAdmin, admin.NoRueAdmin, admin.NomRueAdmin, admin.Pays, admin.password);
+
+            if (estAjouter)
+            {
+                message = "Admin add with succes";
+                ViderMessage();
+            }
+            else
+            {
+                message = "An error has occured, please try again later!";
+            }
+        }
+    }
+
+    private void UpdateUserType(string user)
+    {
+        userType = user;
+        Disable();
+
+    }
+    private void Disable()
+    {
+        if (userType.Equals("Professeur") || userType.Equals("Admin"))
+        {
+            isDasabled = true;
+        }
+        else
+        {
+            isDasabled = false;
+        }
+    }
+
+    public void ViderMessage()
+    {
+        this.ajoutClassProperty.Nom = null;
+        this.ajoutClassProperty.Prenom = null;
+        this.ajoutClassProperty.Code = null;
+        this.ajoutClassProperty.NumTel = null;
+        this.ajoutClassProperty.NomRue = null;
+        this.ajoutClassProperty.NomVille = null;
+        this.ajoutClassProperty.password = null;
+        this.ajoutClassProperty.pays = null;
+        this.ajoutClassProperty.NumRue = 0;
+    }
+
+
+
+}

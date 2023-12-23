@@ -2,6 +2,7 @@
 @using ColNet2._0.Authentification
 @inject NavigationManager navManager
 @inject AuthenticationStateProvider authProvider
+@inject NavigationManager NavigationManager
 
 <PageTitle>ColNet</PageTitle>
 
@@ -23,7 +24,7 @@
                     </NavLink>
                 </NotAuthorized>
             </AuthorizeView>
-           
+            <button class="oi oi-account-login" aria-hidden="true" @onclick="navigation"></button> EN-FR
            
         </div>
 
@@ -34,7 +35,20 @@
 </div>
 
 @code {
-
+    private void navigation()
+    {
+        string url = NavigationManager.Uri;
+        string nouvelleUrl = "";
+        if (url.EndsWith("EN", StringComparison.OrdinalIgnoreCase))
+        {
+            nouvelleUrl = url.Substring(0, url.Length - 2);
+        }
+        else
+        {
+            nouvelleUrl = url + "EN";
+        }
+        NavigationManager.NavigateTo(nouvelleUrl);
+    }
 
     private async Task Logout()
     {
