@@ -18,7 +18,7 @@
                         <div class="mb-md-5 mt-md-4 pb-5">
 
                             <h2 class="fw-bold mb-2 text-capitalizes">Valider votre adresse courriel</h2>
-                            <EditForm Model="@eleve" OnValidSubmit="@SendResetPasswordEmail">
+                            <EditForm Model="@eleve" OnValidSubmit="@Filtrer">
                                 <DataAnnotationsValidator/>
                                 <div class="form-outline form-black mb-3">
                                     <label class="form-label" for="typeEmailX">Email</label>
@@ -26,10 +26,17 @@
                                     <ValidationMessage For="@(() => eleve.CourrielEleve)" />
 
                                 </div>
-                                <div>
-                                    <span style="color:red">@message</span>
-                                </div>
-                                <button class="btn btn-outline-dark btn-lg px-5" type="submit" @onclick="SendResetPasswordEmail">Envoyer</button>
+                                @if (isLoading)
+                                {
+                                    <div class="spinner"></div>
+                                }
+                                else
+                                {
+                                    <div>
+                                        <span style="color:red">@message</span>
+                                    </div>
+                                }
+                                <button class="btn btn-outline-dark btn-lg px-5" type="submit" @onclick="Filtrer">Envoyer</button>
                             </EditForm>
                             
                             
@@ -47,6 +54,7 @@
     protected string email { get; set; }
     private string message = string.Empty;
     protected TblEleve eleve { get; set; } = new TblEleve();
+    private bool isLoading { get; set; }
 
     protected override Task OnInitializedAsync()
     {
@@ -55,24 +63,24 @@
         return base.OnInitializedAsync();
     }
 
-    public async void ValiderEmail()
-    {
-        if (!(string.IsNullOrWhiteSpace(eleve.CourrielEleve)))
-        {
-            email = await monService.VerifieEmail(eleve.CourrielEleve);
+    //public async void ValiderEmail()
+    //{
+    //    if (!(string.IsNullOrWhiteSpace(eleve.CourrielEleve)))
+    //    {
+    //        email = await monService.VerifieEmail(eleve.CourrielEleve);
 
-            if (email == null)
-            {
-                message = "Le courriel n'existe pas";
-            }
-            else
-            {
-                navManager.NavigateTo("/resetPassword");
-            }
-        }
+    //        if (email == null)
+    //        {
+    //            message = "Le courriel n'existe pas";
+    //        }
+    //        else
+    //        {
+    //            navManager.NavigateTo("/resetPassword");
+    //        }
+    //    }
 
 
-    }
+    //}
     public async Task SendResetPasswordEmail()
     {
 
@@ -91,8 +99,8 @@
                     this.eleve.CourrielEleve = null; 
                     message = "un email a été envoyer à votre courriel. Veillez valider en cliquant sur le lien trouvé dans le mail";
 
-                    await Task.Delay(15000);
-                    navManager.NavigateTo("/login", true);
+                    //await Task.Delay(15000);
+                    //navManager.NavigateTo("/login", true);
                 }
                 else
                 {
@@ -104,7 +112,14 @@
                 message = "Le courriel n'existe pas";
             }
         }
-       
+
+    }
+
+    async Task Filtrer()
+    {
+        isLoading = true;
+        await SendResetPasswordEmail();
+        isLoading = false;
     }
    
 

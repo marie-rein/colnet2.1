@@ -16,34 +16,39 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col">Nom du cours </th>
-                    <th scope="col">Session </th>
-                    <th scope="col">Heure de debut</th>
-                    <th scope="col">Heure de fin</th>
-                    <th scope="col">Local</th>
-                    <th scope="col">Jours</th>
-                 
+                    <th scope="col">Heure</th>
+                    <th scope="col">Lundi</th>
+                    <th scope="col">Mardi</th>
+                    <th scope="col">Mercredi</th>
+                    <th scope="col">Jeudi</th>
+                    <th scope="col">Vendredi</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var jour in new List<string> { "lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"})
+              
+                @foreach (var heure in new List<string> { "08h à 09h", "09h à 10h", "10h à 11h", "11h à 12h", "12h à 13h", "13h à 14h", "14h à 15h", "15h à 16h", "16h à 17h", "17h à 18h" })
                 {
-                    @foreach (var periode in periodeList.Where(p => p.Jours == jour))
-                    {
-                        <tr>
-                            <td>@periode.NomCour</td>
-                            <td>@periode.Session</td>
-                            <td>@periode.HeureDebut</td>
-                            <td>@periode.HeureFin</td>
-                            <td>@periode.Locale</td>
-                            <td>@periode.Jours</td>
-                        </tr>
-                    }
-                        
+                    <tr>
+                        <td>@heure</td>
+                        @foreach (var jour in new List<string> { "lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi" })
+                        {
+                            <td>
+                                @foreach (var periode in sortedSchedule.Where(s => s.Jours == jour))
+                                {
+                                    <div>
+                                        <strong>@periode.NomCour</strong><br />
+                                        @periode.Locale <br />
+                                        @periode.HeureDebut <br />
+                                        @periode.HeureFin
+                                    </div>
+                                }
+                            </td>
+                        }
+                    </tr>
                 }
             </tbody>
-
         </table>
+
         
     </div>
 </div>
@@ -52,10 +57,12 @@
 @code {
     private List<JourEmploiDuTemps> emploisDuTemps = new List<JourEmploiDuTemps>();
     private List<VueHoraire> periodeList { get; set; } = new List<VueHoraire>();
-
+    List<VueHoraire> sortedSchedule { get; set; } = new List<VueHoraire>();
     private string emailEtudiant = string.Empty;
+    private List<string> lesHeures = new List<string> { "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18" };
 
     private string message = string.Empty;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -63,11 +70,32 @@
 
         if (emailEtudiant != null)
         {
-            periodeList = await serviceHoraire.RemplirProgramme(emailEtudiant);
+            sortedSchedule = await serviceHoraire.RemplirProgramme(emailEtudiant);
+
+            //sortedSchedule =
+            //   periodeList.OrderBy(s => s.Jours).ThenBy(s => s.HeureDebut).ToList();
+
         }
-       
+
         //emploisDuTemps = await GetEmploiDuTemps();
     }
+
+    private void CheckHeure(string heure)
+    {
+
+        switch (heure)
+        {
+            //case "08:00":
+            //if (sortedSchedule)
+            //    {
+                    
+            //    }
+            //    break;
+            //default:
+        }
+    }
+    // Create a sorted version of the schedule
+ 
 
     //private async Task<List<JourEmploiDuTemps>> GetEmploiDuTemps()
     //{
@@ -76,6 +104,24 @@
     //    return  new JourEmploiDuTemps(programme);
     //}
 
+    string GetDayName(string abbreviation)
+    {
+        switch (abbreviation)
+        {
+            case "lundi":
+                return "Monday";
+            case "Mardi":
+                return "Tuesday";
+            case "Mercredi":
+                return "Wednesday";
+            case "Jeudi":
+                return "Thursday";
+            case "Vendredi":
+                return "Friday";
+            default:
+                return string.Empty;
+        }
+    }
     public async Task chargerHoraire()
     {
         try

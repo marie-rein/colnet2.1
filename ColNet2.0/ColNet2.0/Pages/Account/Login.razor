@@ -15,9 +15,8 @@
 <PageTitle>Login</PageTitle>
 
 
-
 <section class="vh-100 gradient-custom">
-    <div class="container py-3 h-100" >
+    <div class="container py-3 h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
             <div class="col-12 col-md-8 col-lg-6 col-xl-5" style="border-radius:5rem;border-color:black;">
                 <div class="card-header">
@@ -31,7 +30,7 @@
 
                             @if (checkLogin != null)
                             {
-                                <EditForm Model="@checkLogin" OnValidSubmit="VerifierLogin">
+                                <EditForm Model="@checkLogin" OnValidSubmit="Filtrer">
                                     <DataAnnotationsValidator />
 
                                     <div class="form-outline form-white mb-3">
@@ -47,14 +46,22 @@
 
                                     @if (estClicker)
                                     {
-                                        @if (alertMessage)
+                                        @if (isLoading)
                                         {
-                                            navManager.NavigateTo("/", true);
+                                            <div class="spinner"></div>
                                         }
                                         else
                                         {
-                                            <span style="color:red; font-size: 0.8rem;">Mot de passe et/ou courriel incorrecte</span>
+                                            @if (alertMessage)
+                                            {
+                                                navManager.NavigateTo("/", true);
+                                            }
+                                            else
+                                            {
+                                                <span style="color:red; font-size: 0.8rem;">Mot de passe et/ou courriel incorrecte</span>
+                                            }
                                         }
+                                       
                                     }
 
                                     <p class="small mb-3 pb-lg-1"><a class="text-black" href="verifierCourriel" style="font-size: 0.8rem;">Mot de passe oublié?</a></p>
@@ -64,7 +71,7 @@
                             }
                         </div>
                     </div>
-                </div> 
+                </div>
             </div>
         </div>
     </div>
@@ -79,6 +86,8 @@
 
     private bool alertMessage { get; set; }
     private bool estClicker = false;
+    private bool isLoading { get; set; }
+    private bool isLogged { get; set; }
     private string message = string.Empty;
 
     protected override Task OnInitializedAsync()
@@ -93,7 +102,7 @@
         {
             if (!(string.IsNullOrWhiteSpace(checkLogin.email) || string.IsNullOrWhiteSpace(checkLogin.password)))
             {
-               
+
                 estClicker = true;
                 alertMessage = await loginService.SelectUserLogin(checkLogin, (CustomAuthenticationStateProvider)authProvider);
 
@@ -112,6 +121,14 @@
     public async Task<bool> CheckUser()
     {
         return true;
+    }
+
+    async Task Filtrer()
+    {
+        isLoading = true;
+        await Task.Delay(1);
+        VerifierLogin();
+        isLoading = false;
     }
 
 }
